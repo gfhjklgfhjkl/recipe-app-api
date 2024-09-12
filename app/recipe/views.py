@@ -3,7 +3,7 @@ from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 
 # noinspection PyUnresolvedReferences
-from core.models import Recipe, Tag
+from core.models import Recipe, Tag, Ingredient
 from . import serializers
 
 
@@ -30,14 +30,31 @@ class RecipeViewSet(viewsets.ModelViewSet):
         serializer.save(user=self.request.user)
 
 
-class TagViewSet(mixins.DestroyModelMixin, mixins.UpdateModelMixin, mixins.ListModelMixin, viewsets.GenericViewSet):
-    """Manage tags in the database."""
+class BaseRecipeAttrViewSet(
+    mixins.DestroyModelMixin,
+    mixins.UpdateModelMixin,
+    mixins.ListModelMixin,
+    viewsets.GenericViewSet,
+):
+    """Base viewset for recipe attributes."""
 
-    serializer_class = serializers.TagSerializer
-    queryset = Tag.objects.all()
     authentication_classes = [TokenAuthentication]
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        """Retrieve tags for authenticated user."""
+        """Retrieve tags for the authenticated user."""
         return self.queryset.filter(user=self.request.user).order_by("-name")
+
+
+class TagViewSet(BaseRecipeAttrViewSet):
+    """Manage tags in the database."""
+
+    serializer_class = serializers.TagSerializer
+    queryset = Tag.objects.all()
+
+
+class IngredientViewSet(BaseRecipeAttrViewSet):
+    """Manage ingredients in the database."""
+
+    serializer_class = serializers.IngredientSerializer
+    queryset = Ingredient.objects.all()
